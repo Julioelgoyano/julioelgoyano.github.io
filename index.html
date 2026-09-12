@@ -3,77 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Canal de TV</title>
+    <title>Player Relay</title>
     
-    <!-- Cargar Clappr y el plugin de Selector de Calidad -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr-level-selector-plugin@latest/dist/level-selector.min.js"></script>
     
     <style>
-        body { 
+        /* Cero márgenes y desbordamiento oculto para encajar perfecto en un iframe */
+        html, body { 
             margin: 0; 
-            padding: 0;
-            background-color: #111; 
-            display: flex;
-            flex-direction: column; /* Apila el video y el botón en una columna */
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            gap: 20px; /* Agrega espacio entre el video y el botón */
-        }
-        #reproductor-tv { 
+            padding: 0; 
             width: 100%; 
-            max-width: 900px; 
-            aspect-ratio: 16/9; 
+            height: 100%; 
+            overflow: hidden; 
+            background-color: #000; /* Fondo negro puro */
         }
-        /* Estilos del botón para que se vea moderno */
-        #btn-fullscreen {
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            background-color: #e50914; /* Rojo estilo plataforma de streaming */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: sans-serif;
-            transition: background-color 0.2s;
-        }
-        #btn-fullscreen:hover {
-            background-color: #b20710; /* Color más oscuro al pasar el mouse */
+        #reproductor-tv {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
     <div id="reproductor-tv"></div>
-    
-    <!-- Botón que el usuario clickeará -->
-    <button id="btn-fullscreen">Pantalla Completa</button>
 
     <script>
         var player = new Clappr.Player({
-            // Aquí se actualizó el enlace al nuevo stream
             source: "https://envivo.cncity.live/hls/envivo.m3u8",
             parentId: "#reproductor-tv",
+            mimeType: "application/x-mpegURL",
             width: '100%',
             height: '100%',
-            autoPlay: true,
-            mute: true,
-            plugins: [LevelSelector],
-            levelSelectorConfig: {
-                title: 'Calidad',
-                labels: {
-                    3: '1080p', 
-                    2: '720p',
-                    1: '480p',
-                    0: '360p'
-                }
-            }
-        });
-
-        // Lógica de JavaScript que conecta el botón con el reproductor
-        document.getElementById('btn-fullscreen').addEventListener('click', function() {
-            player.core.toggleFullscreen();
+            autoPlay: false,
+            mute: false
         });
     </script>
 </body>
