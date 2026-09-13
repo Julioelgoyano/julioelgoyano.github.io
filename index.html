@@ -3,39 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Relay</title>
+    <title>Player Relay Personalizado (Prueba cnCity) - Plyr</title>
     
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+    <!-- Estilos de Plyr -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     
     <style>
-        /* Cero márgenes y desbordamiento oculto para encajar perfecto en un iframe */
         html, body { 
             margin: 0; 
             padding: 0; 
             width: 100%; 
             height: 100%; 
             overflow: hidden; 
-            background-color: #000; /* Fondo negro puro */
+            background-color: #000;
         }
-        #reproductor-tv {
+        .plyr {
             width: 100%;
             height: 100%;
+        }
+        .plyr__video-wrapper {
+            height: 100%;
+        }
+        .marca-agua {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            max-width: 150px;
+            z-index: 10;
+            opacity: 0.8;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div id="reproductor-tv"></div>
+
+    <!-- <img src="logo.png" class="marca-agua" alt="Logo"> -->
+
+    <video id="reproductor-tv" poster="miniatura.jpg" crossorigin playsinline></video>
+
+    <!-- HLS.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    
+    <!-- Plyr JS -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
     <script>
-        var player = new Clappr.Player({
-            source: "https://envivo.cncity.live/hls/envivo.m3u8",
-            parentId: "#reproductor-tv",
-            mimeType: "application/x-mpegURL",
-            width: '100%',
-            height: '100%',
-            autoPlay: true,
-            mute: false
-        });
+        const video = document.getElementById('reproductor-tv');
+        // Enlace HLS limpio para que el navegador lo pueda reproducir
+        const source = "https://envivo.cncity.live/hls/envivo.m3u8";
+        
+        const defaultOptions = {
+            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
+            settings: ['quality'],
+            autoplay: true,
+            muted: true 
+        };
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(source);
+            
+            hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                
+                const availableQualities = hls.levels.map((l) => l.height);
+                availableQualities.unshift(0); 
+
+                defaultOptions.quality = {
+                    default: 0, 
+                    options: availableQualities,
+                    forced: true,
+                    onChange: (e) => updateQuality(e),
+                };
+                
+                defaultOptions.i18n = {
+                    qualityLabel: {
+                        0: 'Auto',
+                    },
+                };
+
+                new Plyr(video, defaultOptions);
+            });
+            
+            hls.attachMedia(video);
+            window.hls = hls;
+
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = source;
+            new Plyr(video, defaultOptions);
+        }
+
+        function updateQuality(newQuality) {
+            if (newQuality === 0) {
+                window.hls.currentLevel = -1; 
+            } else {
+                window.hls.levels.forEach((level, levelIndex) => {
+                    if (level.height === newQuality) {
+                        window.hls.currentLevel = levelIndex;
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
