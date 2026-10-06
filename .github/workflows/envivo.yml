@@ -1,4 +1,4 @@
-name: Transmitir En Vivo (RTMP Privado)
+name: Transmitir En Vivo (Varios Videos)
 
 on:
   workflow_dispatch:
@@ -13,8 +13,12 @@ jobs:
       - name: Instalar FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Iniciar transmisión a servidor privado
+      - name: Crear lista de videos y transmitir
         env:
           RTMP_TARGET: ${{ secrets.RTMP_TARGET }}
         run: |
-          ffmpeg -re -stream_loop -1 -i "Room-in-INSTITUTIONAL.mp4" -c:v copy -c:a aac -f flv "$RTMP_TARGET"
+          # Detecta todos los .mp4 en la raíz del repositorio y los anota en lista.txt
+          for f in *.mp4; do echo "file '$PWD/$f'" >> lista.txt; done
+          
+          # Transmite la lista completa en bucle infinito hacia tu servidor
+          ffmpeg -re -stream_loop -1 -f concat -safe 0 -i lista.txt -c:v copy -c:a aac -f flv "$RTMP_TARGET"
