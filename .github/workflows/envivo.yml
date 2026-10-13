@@ -1,4 +1,4 @@
-name: Transmitir En Vivo (Varios Videos)
+name: Transmitir En Vivo O-Plus TV
 
 on:
   workflow_dispatch:
@@ -10,15 +10,42 @@ jobs:
       - name: Descargar el repositorio
         uses: actions/checkout@v4
 
-      - name: Instalar FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Instalar FFmpeg y fuentes
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
 
       - name: Crear lista de videos y transmitir
         env:
           RTMP_TARGET: ${{ secrets.RTMP_TARGET }}
+          TZ: "America/Caracas"
         run: |
           # Detecta todos los .mp4 en la raíz del repositorio y los anota en lista.txt
           for f in *.mp4; do echo "file '$PWD/$f'" >> lista.txt; done
           
-          # Transmite la lista completa en bucle infinito hacia tu servidor
-          ffmpeg -re -stream_loop -1 -f concat -safe 0 -i lista.txt -c:v copy -c:a aac -f flv "$RTMP_TARGET"
+          # Texto con la lista oficial de canales de O-Plus TV
+          LISTA_CANALES="  GUÍA DE CANALES O-PLUS TV:   [2] TL+ (Anime)   •   [3] TL+ Santa Ana (Entretenimiento)   •   [4] Primired (OFICIAL)   •   [5] CN City (Animación)   •   [6] Optiradio FM (Musical)   •   [7] Optiradio TV (OptiMovies)   •   Disfruta la señal en oplustv.github.io   •  "
+
+          # Transmite aplicando el fondo, el video redimensionado, el ticker de canales y la hora en vivo
+          ffmpeg -re -stream_loop -1 -f concat -safe 0 -i lista.txt \
+            -i background.png \
+            -filter_complex "\
+              [0:v]scale=1115:625[video_main]; \
+              [1:v][video_main]overlay=715:190[bg_video]; \
+              [bg_video]drawtext=\
+                fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
+                text='$LISTA_CANALES':\
+                fontcolor=white:\
+                fontsize=24:\
+                x='if(eq(mod(t*90\, 2200)\, 0)\, 1830\, 1830-mod(t*90\, 2200))':\
+                y=50[bg_ticker]; \
+              [bg_ticker]drawtext=\
+                fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
+                text='%{localtime\:%a. %d/%m | %H\:%M}':\
+                fontcolor=white:\
+                fontsize=22:\
+                x=1600:y=50[final]" \
+            -map "[final]" -map 0:a \
+            -c:v libx264 -preset veryfast -b:v 3500k -maxrate 3500k -bufsize 7000k -pix_fmt yuv420p -g 60 \
+            -c:a aac -b:a 128k \
+            -f flv "$RTMP_TARGET"
