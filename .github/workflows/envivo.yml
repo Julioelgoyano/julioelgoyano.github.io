@@ -49,21 +49,21 @@ jobs:
               [tmp1][ticker]overlay=467:19[tmp2]; \
               [tmp2]drawtext=\
                 fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
-                text='oplustv.github.io':\
+                text='Estás viendo O-Plus TV':\
                 enable='between(mod(t\,30)\,0\,10)':\
-                fontcolor=white:fontsize=30:\
+                fontcolor=white:fontsize=28:\
                 x=489+(434-text_w)/2:y=601+(106-text_h)/2,\
               drawtext=\
                 fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
-                text='Canales del 2 al 7':\
+                text='Anime en TL+ canal 2':\
                 enable='between(mod(t\,30)\,10\,20)':\
-                fontcolor=white:fontsize=30:\
+                fontcolor=white:fontsize=28:\
                 x=489+(434-text_w)/2:y=601+(106-text_h)/2,\
               drawtext=\
                 fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
-                text='Comparte la señal':\
+                text='Hecho con cariño':\
                 enable='between(mod(t\,30)\,20\,30)':\
-                fontcolor=white:fontsize=30:\
+                fontcolor=white:fontsize=28:\
                 x=489+(434-text_w)/2:y=601+(106-text_h)/2,\
               drawtext=\
                 fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
