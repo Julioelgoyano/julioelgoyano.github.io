@@ -21,31 +21,40 @@ jobs:
           TZ: "America/Caracas"
         run: |
           # Detecta todos los .mp4 en la raíz del repositorio y los anota en lista.txt
+          : > lista.txt
           for f in *.mp4; do echo "file '$PWD/$f'" >> lista.txt; done
-          
-          # Texto con la lista oficial de canales de O-Plus TV
-          LISTA_CANALES="  GUÍA DE CANALES O-PLUS TV:   [2] TL+ (Anime)   •   [3] TL+ Santa Ana (Entretenimiento)   •   [4] Primired (OFICIAL)   •   [5] CN City (Animación)   •   [6] Optiradio FM (Musical)   •   [7] Optiradio TV (OptiMovies)   •   Disfruta la señal en oplustv.github.io   •  "
 
-          # Transmite aplicando el fondo, el video redimensionado, el ticker de canales y la hora en vivo
+          # Texto del ticker en un archivo (evita problemas con acentos, corchetes y comillas)
+          LISTA_CANALES="  GUÍA DE CANALES O-PLUS TV:   [2] TL+ (Anime)   •   [3] TL+ Santa Ana (Entretenimiento)   •   [4] Primired (OFICIAL)   •   [5] CN City (Animación)   •   [6] Optiradio FM (Musical)   •   [7] Optiradio TV (OptiMovies)   •   Disfruta la señal en oplustv.github.io   •  "
+          printf '%s' "$LISTA_CANALES" > ticker.txt
+
+          # Fondo 1280x720:
+          #  - video en el rectángulo central (493,135 | 752x450)
+          #  - ticker en la barra superior (467,19), recortada del propio fondo
+          #  - reloj en vivo a la derecha de la misma barra
           ffmpeg -re -stream_loop -1 -f concat -safe 0 -i lista.txt \
-            -i background.png \
+            -loop 1 -framerate 30 -i background.png \
             -filter_complex "\
-              [0:v]scale=1115:625[video_main]; \
-              [1:v][video_main]overlay=715:190[bg_video]; \
-              [bg_video]drawtext=\
+              [1:v]scale=1280:720,split=2[base][raw]; \
+              [raw]crop=600:37:467:19,drawtext=\
                 fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
-                text='$LISTA_CANALES':\
+                textfile=ticker.txt:\
                 fontcolor=white:\
                 fontsize=24:\
-                x='if(eq(mod(t*90\, 2200)\, 0)\, 1830\, 1830-mod(t*90\, 2200))':\
-                y=50[bg_ticker]; \
-              [bg_ticker]drawtext=\
+                y=(h-text_h)/2:\
+                x=w-mod(t*110\,w+text_w)[ticker]; \
+              [0:v]scale=752:450:force_original_aspect_ratio=decrease,pad=752:450:(ow-iw)/2:(oh-ih)/2:black,setsar=1[vid]; \
+              [base][vid]overlay=493:135[tmp1]; \
+              [tmp1][ticker]overlay=467:19[tmp2]; \
+              [tmp2]drawtext=\
                 fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:\
-                text='%{localtime\:%a. %d/%m | %H\:%M}':\
+                text='%{localtime\:%d/%m  %H\:%M}':\
                 fontcolor=white:\
-                fontsize=22:\
-                x=1600:y=50[final]" \
-            -map "[final]" -map 0:a \
-            -c:v libx264 -preset veryfast -b:v 3500k -maxrate 3500k -bufsize 7000k -pix_fmt yuv420p -g 60 \
-            -c:a aac -b:a 128k \
+                fontsize=20:\
+                x=1067+(196-text_w)/2:\
+                y=19+(37-text_h)/2,\
+              format=yuv420p[final]" \
+            -map "[final]" -map 0:a? \
+            -c:v libx264 -preset veryfast -b:v 3500k -maxrate 3500k -bufsize 7000k -g 60 -r 30 \
+            -c:a aac -b:a 128k -ar 44100 \
             -f flv "$RTMP_TARGET"
