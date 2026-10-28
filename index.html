@@ -1,108 +1,881 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Relay Personalizado (Prueba cnCity) - Plyr</title>
-    
-    <!-- Estilos de Plyr -->
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    
-    <style>
-        html, body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
-            background-color: #000;
-        }
-        .plyr {
-            width: 100%;
-            height: 100%;
-        }
-        .plyr__video-wrapper {
-            height: 100%;
-        }
-        .marca-agua {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            max-width: 150px;
-            z-index: 10;
-            opacity: 0.8;
-            pointer-events: none;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1013">
+<title>EPG Maker</title>
+<style>
+:root{
+  --bg:#0e1013;--s1:#161a1f;--s2:#1d2229;--line:#2a313a;--text:#e8ecf1;--muted:#8c97a4;
+  --accent:#7b8bff;--accent-ink:#0e1013;--film:#f0b35a;--bad:#ff8a80;--ok:#6fd7a4;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:var(--text)}
+button{cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--s2);padding:8px 14px}
+button:hover{border-color:var(--accent)}
+button:disabled{opacity:.5;cursor:wait}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:650}
+button.ghost{background:none}
+button.link{border:0;background:none;color:var(--accent);padding:4px 8px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+input[type=checkbox]{width:auto}
+textarea{min-height:70px;resize:vertical}
+label{display:grid;gap:5px;font-size:13px;color:var(--muted)}
+label.chk{display:flex;align-items:center;gap:8px;grid-template-columns:none}
+summary{cursor:pointer;color:var(--muted);font-size:13px;margin:6px 0}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.brand strong{font-size:19px}
+.brand span{color:var(--muted);margin-left:10px;font-size:13px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+#status{max-width:860px;margin:10px auto 0;padding:0 18px;min-height:1.5em;font-size:14px}
+#status.bad{color:var(--bad)}#status.ok{color:var(--ok)}
+.wrap{max-width:860px;margin:0 auto;padding:6px 18px 60px;display:grid;gap:16px}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:20px}
+h2{margin:0 0 16px;font-size:17px;display:flex;align-items:center;gap:10px}
+.n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:700}
+.banner{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;border:1px solid var(--accent);background:var(--s1);border-radius:14px;padding:16px 20px}
+.banner p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.inline{display:flex;gap:8px;flex:1;min-width:260px;max-width:420px}
+.chbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chbar select{flex:1;min-width:180px;width:auto}
+.grid2,.grid3,.grid4{display:grid;gap:12px;margin-bottom:12px}
+.grid2{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.grid3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.grid4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.switch{display:flex;align-items:center;gap:10px;color:var(--text);cursor:pointer;font-size:14px}
+.switch input{position:absolute;opacity:0;width:0}
+.track{width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text);transition:transform .15s}
+.switch input:checked+.track{background:var(--accent)}
+.switch input:checked+.track::after{transform:translateX(16px);background:var(--accent-ink)}
+.switch input:focus-visible+.track{outline:2px solid var(--accent);outline-offset:2px}
+.hint{margin:8px 0 0;color:var(--muted);font-size:13px}
+
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;margin-bottom:16px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);padding:8px 10px;border-radius:8px}
+.seg button.on{background:var(--s2);color:var(--text);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+.seg.small{display:inline-flex;margin-bottom:12px}
+.seg.small button{flex:none;padding:6px 14px;font-size:14px}
+.searchrow{display:flex;gap:8px;margin-bottom:14px}
+.posters{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px}
+.poster{padding:0;border-radius:10px;overflow:hidden;text-align:left;background:var(--s2);display:block;width:100%}
+.poster img,.poster .ph{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--line)}
+.poster .cap{padding:7px 9px}
+.poster b{display:block;font-size:13px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.poster small{color:var(--muted)}
+.badge{font-size:12px;font-weight:650;color:var(--accent)}
+.badge.movie{color:var(--film)}
+#dHead{display:flex;gap:14px;align-items:flex-start;padding:12px;background:var(--s2);border-radius:12px;margin-bottom:16px}
+#dHead img,#dHead .ph{width:62px;aspect-ratio:2/3;object-fit:cover;border-radius:6px;background:var(--line);flex:none}
+#dHead .txt{flex:1;min-width:0}
+#dHead p{margin:4px 0 0;color:var(--muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.muted{color:var(--muted);font-size:13px;margin:0}
+
+.schhead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.schhead h2{margin:0}
+.tools{border:1px solid var(--line);border-radius:10px;padding:2px 12px;margin:10px 0 4px}
+.tools .inner{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0 10px}
+.tools input[type=number]{width:70px}
+.empty{padding:34px 10px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px;margin-top:12px}
+.day{margin:18px 0 6px;font-size:13px;color:var(--muted);font-weight:650;text-transform:capitalize;position:sticky;top:56px;background:var(--s1);padding:4px 0;z-index:1}
+.item{display:flex;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:var(--s2)}
+.item.off{border-style:dashed;background:none}
+.when{display:grid;min-width:62px;font-variant-numeric:tabular-nums;font-size:13px}
+.when span{color:var(--muted)}
+.th{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--line);flex:none}
+.info{flex:1;min-width:0}
+.info strong{overflow-wrap:anywhere}
+.tag{display:inline-block;margin-left:8px;font-size:12px;color:var(--muted)}
+.tag.new{color:var(--ok);font-weight:650}
+.sub{color:var(--muted);font-size:13px}
+.ops{display:flex;flex:none;flex-wrap:wrap;justify-content:flex-end;max-width:230px}
+.gap{font-size:12px;color:var(--bad);margin:2px 0 6px 58px}
+
+.mini{padding:3px 6px;font-size:13px}
+.opts{display:grid;gap:10px;margin:10px 0 0}
+.xmlprev{font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;min-height:220px;white-space:pre;margin-bottom:6px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--s1);color:var(--text);width:min(560px,94vw);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+dialog h2{margin-bottom:14px}
+menu{display:flex;gap:8px;justify-content:flex-end;margin:14px 0 0;padding:0}
+@media (max-width:560px){.item{flex-wrap:wrap}.ops{width:100%;justify-content:flex-end}.brand span{display:none}}
+</style>
 </head>
 <body>
+<header class="top">
+  <div class="brand"><strong>EPG Maker</strong><span>XMLTV fácil</span></div>
+  <div class="actions">
+    <button id="bUndo" class="ghost" disabled title="Deshacer el último cambio (Ctrl+Z)">Deshacer</button>
+    <button id="bSettings" class="ghost">Ajustes</button>
+    <button id="bExportMore" class="ghost">Exportar…</button>
+    <button id="bExport" class="primary">Descargar XML</button>
+  </div>
+</header>
+<div id="status" role="status"></div>
 
-    <!-- <img src="logo.png" class="marca-agua" alt="Logo"> -->
+<div class="wrap">
+  <div id="keyBanner" class="banner" hidden>
+    <div>
+      <strong>Activa la búsqueda automática</strong>
+      <p>Pega tu API key gratuita de TMDB (themoviedb.org, en Ajustes y luego API). Se guarda solo en este navegador.</p>
+    </div>
+    <div class="inline"><input id="kKey" type="password" autocomplete="off" placeholder="Tu API key"><button id="bKey" class="primary">Activar</button></div>
+  </div>
 
-    <video id="reproductor-tv" poster="miniatura.jpg" crossorigin playsinline></video>
+  <section class="card">
+    <h2><span class="n">1</span>Información del canal</h2>
+    <div class="chbar">
+      <select id="chSel" aria-label="Canal"></select>
+      <button id="bNewCh">+ Nuevo canal</button>
+      <button id="bDelCh" class="ghost">Eliminar canal</button>
+    </div>
+    <div class="grid3">
+      <label>Nombre del canal<input id="cName" placeholder="Ej: Optiradio TV"></label>
+      <label>ID del canal (el tvg-id de tu lista m3u)<input id="cId"></label>
+      <label>Logo (URL, opcional)<input id="cLogo" type="url" placeholder="https://..."></label>
+    </div>
+    <label class="switch"><input type="checkbox" id="round"><span class="track"></span>Redondear duraciones a bloques de 15 minutos</label>
+  </section>
 
-    <!-- HLS.js -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
-    
-    <!-- Plyr JS -->
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+  <section class="card">
+    <h2><span class="n">2</span>Agregar programa</h2>
+    <div class="seg" id="mainTabs">
+      <button data-tab="search" class="on">Buscar</button>
+      <button data-tab="manual">Manual</button>
+      <button data-tab="off">Fuera del aire</button>
+    </div>
 
-    <script>
-        const video = document.getElementById('reproductor-tv');
-        // Enlace HLS limpio para que el navegador lo pueda reproducir
-        const source = "https://envivo.cncity.live/hls/envivo.m3u8";
-        
-        const defaultOptions = {
-            controls: ['play-large', 'play', '', '', 'mute', 'volume', 'settings', 'fullscreen'],
-            settings: ['quality'],
-            autoplay: true,
-            muted: true 
-        };
+    <div id="tab-search">
+      <div class="seg small" id="kind">
+        <button data-k="multi" class="on">Todo</button>
+        <button data-k="tv">Series</button>
+        <button data-k="movie">Películas</button>
+      </div>
+      <div class="searchrow">
+        <input id="q" placeholder="Escribe un título: Los Simpson, Matrix 1999, The Office S02E03...">
+        <button id="bSearch" class="primary">Buscar</button>
+      </div>
+      <div id="results" class="posters"></div>
+      <div id="detail" hidden>
+        <div id="dHead"></div>
+        <div id="tvOpts" hidden>
+          <div class="grid3">
+            <label>Temporada<input id="tvS" type="number" min="0"></label>
+            <label>Episodio inicial<input id="tvE" type="number" min="1"></label>
+            <label>Episodios seguidos<input id="tvN" type="number" min="1" value="1"></label>
+          </div>
+          <label class="chk" style="margin-bottom:12px"><input type="checkbox" id="tvRand"> Elegir los episodios al azar dentro de la temporada</label>
+        </div>
+        <div class="grid2">
+          <label>Hora de inicio<input id="aStart" type="datetime-local" class="st"></label>
+          <label>Duración en minutos (vacío = la de la API)<input id="durA" type="number" min="1"></label>
+        </div>
+        <label class="chk" id="newAWrap" hidden><input type="checkbox" id="newA"> Marcar como episodio nuevo</label>
+        <p class="hint" id="tvHint"></p>
+        <div class="btns">
+          <button id="bAdd" class="primary">Agregar a la programación</button>
+          <button id="bAddNext">Agregar y buscar otro</button>
+          <button id="bCancelSel" class="ghost">Cancelar</button>
+        </div>
+      </div>
+    </div>
 
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(source);
-            
-            hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                
-                const availableQualities = hls.levels.map((l) => l.height);
-                availableQualities.unshift(0); 
+    <div id="tab-manual" hidden>
+      <div id="manualFields"></div>
+      <div class="btns"><button id="bManual" class="primary">Agregar a la programación</button></div>
+    </div>
 
-                defaultOptions.quality = {
-                    default: 0, 
-                    options: availableQualities,
-                    forced: true,
-                    onChange: (e) => updateQuality(e),
-                };
-                
-                defaultOptions.i18n = {
-                    qualityLabel: {
-                        0: 'Auto',
-                    },
-                };
+    <div id="tab-off" hidden>
+      <div class="grid2">
+        <label>Título<input id="oTitle" value="Fuera del aire"></label>
+        <label>Descripción<input id="oDesc" value="La estación está fuera del aire"></label>
+      </div>
+      <div class="grid2">
+        <label>Hora de inicio<input id="oStart" type="datetime-local" class="st"></label>
+        <label>Duración en horas<input id="oHours" type="number" min="0.25" step="0.25" value="1"></label>
+      </div>
+      <div class="btns"><button id="bOff" class="primary">Agregar bloque fuera del aire</button></div>
+    </div>
 
-                new Plyr(video, defaultOptions);
-            });
-            
-            hls.attachMedia(video);
-            window.hls = hls;
+    <label class="switch" style="margin-top:18px"><input type="checkbox" id="insertMode"><span class="track"></span>Si ya hay programas a esa hora, recorrerlos (insertar en vez de empalmar)</label>
+  </section>
 
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = source;
-            new Plyr(video, defaultOptions);
+  <section class="card">
+    <div class="schhead">
+      <h2><span class="n">3</span><span id="schTitle">Programación</span></h2>
+      <div class="actions">
+        <button id="bSave">Guardar proyecto</button>
+        <button id="bLoad" title="Abre un proyecto .json o importa un XMLTV que ya tengas">Cargar o importar</button>
+        <button id="bClear" class="ghost">Vaciar</button>
+        <input type="file" id="fLoad" accept=".json,.xml,application/json,text/xml,application/xml" hidden>
+      </div>
+    </div>
+    <p class="muted" id="schInfo"></p>
+    <details class="tools">
+      <summary>Herramientas</summary>
+      <div class="inner">
+        <button id="bCompact" title="Quita los huecos entre programas">Quitar huecos</button>
+        <button id="bShuffle" title="Reordena al azar todos los programas del canal">Mezclar el orden</button>
+        <span class="muted">|</span>
+        <button id="bRepeat">Repetir la programación hasta completar</button>
+        <input id="rDays" type="number" min="1" value="7" aria-label="Días"><span class="muted">días</span>
+      </div>
+    </details>
+    <div id="rows"></div>
+  </section>
+</div>
+
+<dialog id="dEdit">
+  <h2>Editar programa</h2>
+  <div id="editFields"></div>
+  <label class="chk"><input type="checkbox" id="eShift" checked> Recorrer los programas siguientes si cambia la duración</label>
+  <menu><button id="eCancel">Cancelar</button><button id="eSave" class="primary">Guardar cambios</button></menu>
+</dialog>
+
+<dialog id="dExp">
+  <h2>Exportar</h2>
+  <div class="opts">
+    <label class="chk"><input type="checkbox" id="xOnly"> Solo el canal actual</label>
+    <label class="chk"><input type="checkbox" id="xFuture"> Omitir programas que ya terminaron</label>
+    <label class="chk"><input type="checkbox" id="xImg" checked> Incluir imágenes de los programas</label>
+    <label class="chk"><input type="checkbox" id="xCred" checked> Incluir reparto, director y clasificación</label>
+  </div>
+  <div class="btns" style="margin:16px 0">
+    <button id="xDl" class="primary">Descargar .xml</button>
+    <button id="xGz">Descargar .xml.gz</button>
+    <button id="xCopy">Copiar XML</button>
+    <button id="xView">Vista previa</button>
+  </div>
+  <textarea id="xPrev" class="xmlprev" readonly hidden></textarea>
+  <menu><button id="xClose">Cerrar</button></menu>
+</dialog>
+
+<dialog id="dlg">
+  <h2>Ajustes</h2>
+  <div class="grid2" style="grid-template-columns:1fr">
+    <label>API key de TMDB (v3 o token v4)<input id="sKey" type="password" autocomplete="off"></label>
+    <label>Idioma de títulos y descripciones
+      <select id="sLang"><option value="es-MX">Español (México)</option><option value="es-ES">Español (España)</option><option value="es-AR">Español (Argentina)</option><option value="en-US">English</option></select>
+    </label>
+    <label>País para la clasificación por edades
+      <select id="sCountry"><option value="MX">México</option><option value="ES">España</option><option value="AR">Argentina</option><option value="CO">Colombia</option><option value="CL">Chile</option><option value="PE">Perú</option><option value="US">Estados Unidos</option></select>
+    </label>
+    <label class="chk"><input type="checkbox" id="sCredits"> Guardar reparto, director y clasificación al buscar</label>
+    <label>Formato de hora en pantalla
+      <select id="sH12"><option value="0">24 horas</option><option value="1">12 horas (AM/PM)</option></select>
+    </label>
+    <label>Zona horaria del EPG
+      <input id="sTz" list="tzs">
+      <datalist id="tzs">
+        <option value="America/Mexico_City"><option value="America/Bogota"><option value="America/Lima"><option value="America/Caracas">
+        <option value="America/Santiago"><option value="America/Argentina/Buenos_Aires"><option value="America/New_York"><option value="America/Los_Angeles">
+        <option value="Europe/Madrid"><option value="UTC">
+      </datalist>
+    </label>
+  </div>
+  <menu><button id="sCancel">Cancelar</button><button id="sOk" class="primary">Guardar</button></menu>
+</dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const p2=n=>String(n).padStart(2,'0');
+const S={key:'',lang:'es-MX',tz:(Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'),round:false,insert:true,credits:true,country:'MX',h12:false,exp:{only:false,future:false,img:true,cred:true},channels:[],progs:[],seq:1,curCh:''};
+let sel=null,results=[],show=null,parsed=null,editId=null,kind='multi',tt;
+const seasonCache={};
+
+/* ---------- estado ---------- */
+function load(){try{Object.assign(S,JSON.parse(localStorage.getItem('epgmaker')||'{}'))}catch(e){}}
+function save(){try{localStorage.setItem('epgmaker',JSON.stringify(S))}catch(e){}}
+function say(msg,bad){const e=$('status');e.textContent=msg;e.className=bad?'bad':'ok';clearTimeout(tt);tt=setTimeout(()=>e.textContent='',7000)}
+const progsOf=ch=>S.progs.filter(p=>p.ch===ch).sort((a,b)=>a.start-b.start);
+const curChan=()=>S.channels.find(c=>c.id===S.curCh);
+const chanName=id=>(S.channels.find(c=>c.id===id)||{}).name||id;
+const slugify=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const rdur=d=>S.round?Math.max(15,Math.ceil(d/15)*15):d;
+
+/* ---------- zona horaria ---------- */
+function zparts(ms){
+  const f=new Intl.DateTimeFormat('en-US',{timeZone:S.tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const o={};f.formatToParts(new Date(ms)).forEach(p=>o[p.type]=p.value);
+  if(o.hour==='24')o.hour='00';
+  const asUTC=Date.UTC(+o.year,+o.month-1,+o.day,+o.hour,+o.minute,+o.second);
+  o.off=Math.round((asUTC-Math.floor(ms/1000)*1000)/60000);
+  return o;
+}
+function fromLocal(str){
+  const m=(str||'').match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+)/);if(!m)return NaN;
+  const g=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);
+  let ms=g-zparts(g).off*60000;ms=g-zparts(ms).off*60000;return ms;
+}
+function toLocal(ms){const z=zparts(ms);return `${z.year}-${z.month}-${z.day}T${z.hour}:${z.minute}`}
+function xd(ms){const z=zparts(ms),a=Math.abs(z.off);return `${z.year}${z.month}${z.day}${z.hour}${z.minute}${z.second} ${z.off<0?'-':'+'}${p2(Math.floor(a/60))}${p2(a%60)}`}
+function hm(ms){const z=zparts(ms);if(!S.h12)return `${z.hour}:${z.minute}`;const h=+z.hour;return `${(h%12)||12}:${z.minute} ${h<12?'AM':'PM'}`}
+function dayLabel(ms){return new Intl.DateTimeFormat('es',{timeZone:S.tz,weekday:'long',day:'numeric',month:'long'}).format(new Date(ms))}
+function dayKey(ms){const z=zparts(ms);return `${z.year}${z.month}${z.day}`}
+
+/* ---------- TMDB ---------- */
+async function tmdb(path,params={}){
+  if(!S.key)throw new Error('Falta la API key de TMDB.');
+  const u=new URL('https://api.themoviedb.org/3'+path);
+  u.searchParams.set('language',S.lang);
+  for(const k in params)u.searchParams.set(k,params[k]);
+  const opt={};
+  if(S.key.length>40)opt.headers={Authorization:'Bearer '+S.key};else u.searchParams.set('api_key',S.key);
+  let r;try{r=await fetch(u,opt)}catch(e){throw new Error('No se pudo conectar con TMDB. Revisa tu internet.')}
+  if(r.status===401)throw new Error('La API key de TMDB no es válida.');
+  if(!r.ok)throw new Error('TMDB respondió con error '+r.status+'.');
+  return r.json();
+}
+async function getSeason(id,s){
+  const k=id+':'+s+':'+S.lang;
+  if(!seasonCache[k]){try{seasonCache[k]=await tmdb(`/tv/${id}/season/${s}`)}catch(e){seasonCache[k]={episodes:[]}}}
+  return seasonCache[k];
+}
+const img=(p,w='w342')=>p?`https://image.tmdb.org/t/p/${w}${p}`:'';
+const yearOf=r=>(r.release_date||r.first_air_date||'').slice(0,4);
+const nameOf=r=>r.title||r.name||'';
+
+/* ---------- detectar título, temporada, episodio y año ---------- */
+function parseQuery(raw){
+  let t=raw.replace(/\.(mkv|mp4|avi|ts|m4v|mov|wmv)$/i,'').replace(/[._]+/g,' ').trim();
+  let season=null,episode=null,year=null,cut=t;
+  const m=t.match(/\bS(\d{1,2})\s?E(\d{1,3})\b/i)||t.match(/\b(\d{1,2})x(\d{1,3})\b/i)||t.match(/\btemporada\s*(\d+)\s*(?:cap[ií]tulo|episodio|ep)\s*(\d+)/i);
+  if(m){season=+m[1];episode=+m[2];cut=t.slice(0,m.index)}
+  else{const y=t.match(/\b(19\d{2}|20\d{2})\b/);if(y&&y.index>0){year=+y[1];cut=t.slice(0,y.index)}}
+  cut=cut.replace(/\b(2160p|1080p|720p|480p|4k|web[- ]?dl|webrip|bluray|brrip|hdtv|x264|x265|h264|hevc)\b.*$/i,'').replace(/[\[\(].*$/,'').replace(/[-–]\s*$/,'').trim();
+  return{title:cut||t,season,episode,year};
+}
+
+/* ---------- canal ---------- */
+function ensureChannel(){
+  if(!S.channels.length)S.channels.push({id:'mi-canal',name:'Mi canal',logo:'',auto:true});
+  if(!S.channels.find(c=>c.id===S.curCh))S.curCh=S.channels[0].id;
+}
+function renameChannel(c,newId){
+  if(!newId||newId===c.id)return false;
+  if(S.channels.some(x=>x!==c&&x.id===newId))return false;
+  S.progs.forEach(p=>{if(p.ch===c.id)p.ch=newId});
+  if(S.curCh===c.id)S.curCh=newId;
+  c.id=newId;return true;
+}
+function renderChannelBar(){
+  $('chSel').innerHTML=S.channels.map(c=>`<option value="${esc(c.id)}" ${c.id===S.curCh?'selected':''}>${esc(c.name||c.id)} (${S.progs.filter(p=>p.ch===c.id).length})</option>`).join('');
+}
+function fillChannelFields(){const c=curChan();$('cName').value=c.name||'';$('cId').value=c.id;$('cLogo').value=c.logo||'';$('round').checked=!!S.round}
+function switchChannel(id){
+  S.curCh=id;save();sel=null;show=null;renderDetail();
+  renderChannelBar();fillChannelFields();renderSchedule();setDefaultStart();
+}
+function setDefaultStart(){
+  const l=progsOf(S.curCh);
+  const v=l.length?toLocal(l[l.length-1].stop):toLocal(Date.now()).slice(0,11)+'00:00';
+  document.querySelectorAll('.st').forEach(i=>i.value=v);
+}
+
+/* ---------- búsqueda automática ---------- */
+async function doSearch(){
+  const raw=$('q').value.trim();if(!raw)return;
+  if(!S.key){$('kKey').focus();return say('Primero pega tu API key de TMDB para activar la búsqueda.',1)}
+  parsed=parseQuery(raw);sel=null;show=null;renderDetail();
+  $('results').innerHTML='<p class="muted">Buscando...</p>';
+  try{
+    const ep=kind==='multi'?'/search/multi':'/search/'+kind;
+    const d=await tmdb(ep,{query:parsed.title,include_adult:'false'});
+    results=d.results.map(r=>({...r,media_type:r.media_type||kind})).filter(r=>r.media_type==='movie'||r.media_type==='tv')
+      .map((r,i)=>({r,i,sc:(parsed.season!=null&&r.media_type==='tv'?2:0)+(parsed.year&&+yearOf(r)===parsed.year?2:0)}))
+      .sort((a,b)=>b.sc-a.sc||a.i-b.i).slice(0,12).map(x=>x.r);
+    renderResults();
+    if(results.length===1)await pick(0);
+  }catch(e){say(e.message,1);$('results').innerHTML=''}
+}
+function renderResults(){
+  if(!results.length){$('results').innerHTML='<p class="muted" style="grid-column:1/-1">Sin resultados. Prueba con otro título o usa la pestaña Manual.</p>';return}
+  $('results').innerHTML=results.map((r,i)=>`<button class="poster" data-i="${i}">
+    ${r.poster_path?`<img src="${img(r.poster_path,'w185')}" alt="" loading="lazy">`:'<span class="ph"></span>'}
+    <span class="cap"><b>${esc(nameOf(r))}</b><small>${esc(yearOf(r))} <span class="badge ${r.media_type}">${r.media_type==='tv'?'Serie':'Película'}</span></small></span></button>`).join('');
+}
+async function pick(i){
+  sel=results[i];show=null;renderDetail();
+  if(sel.media_type!=='tv')return;
+  try{show=await tmdb('/tv/'+sel.id,{append_to_response:'credits,content_ratings'});await suggestEp()}catch(e){say(e.message,1)}
+}
+function renderDetail(){
+  $('results').hidden=!!sel;$('detail').hidden=!sel;
+  if(!sel)return;
+  $('dHead').innerHTML=`${sel.poster_path?`<img src="${img(sel.poster_path,'w185')}" alt="">`:'<span class="ph"></span>'}
+    <div class="txt"><strong>${esc(nameOf(sel))}</strong> <span class="sub">${esc(yearOf(sel))}</span> <span class="badge ${sel.media_type}">${sel.media_type==='tv'?'Serie':'Película'}</span>
+    <p>${esc(sel.overview||'Sin descripción')}</p></div><button id="bChange" class="ghost">Cambiar</button>`;
+  const tv=sel.media_type==='tv';
+  $('tvOpts').hidden=!tv;$('newAWrap').hidden=!tv;$('tvHint').textContent=tv?'Cargando episodios...':'';
+}
+async function suggestEp(){
+  if(!sel||sel.media_type!=='tv'||!show)return;
+  let s,e,hint;
+  if(parsed&&parsed.season!=null){s=parsed.season;e=parsed.episode;hint='Episodio tomado del texto que escribiste.'}
+  else{
+    const prev=S.progs.filter(p=>p.ch===S.curCh&&p.tvId===sel.id&&p.season);
+    if(prev.length){
+      const m=prev.reduce((a,b)=>(b.season*1000+b.episode>a.season*1000+a.episode)?b:a);
+      s=m.season;e=m.episode+1;hint=`Lo último de esta serie en el canal fue T${m.season} E${m.episode}, así que sigue el siguiente.`;
+    }else{s=1;e=1;hint='Primer episodio de esta serie en este canal.'}
+  }
+  const sd=await getSeason(sel.id,s);
+  if(!sd.episodes.find(x=>x.episode_number===e)&&e>1&&s<show.number_of_seasons){s++;e=1}
+  $('tvS').value=s;$('tvE').value=e;$('tvHint').textContent=hint+' Los datos del episodio se completan solos.';
+}
+
+/* ---------- deshacer ---------- */
+const undoStack=[];
+function snap(){
+  undoStack.push(JSON.stringify({channels:S.channels,progs:S.progs,seq:S.seq,curCh:S.curCh}));
+  if(undoStack.length>40)undoStack.shift();
+  $('bUndo').disabled=false;
+}
+function dropSnap(){undoStack.pop();$('bUndo').disabled=!undoStack.length}
+function undo(){
+  const s=undoStack.pop();$('bUndo').disabled=!undoStack.length;
+  if(!s)return say('No hay nada que deshacer.',1);
+  Object.assign(S,JSON.parse(s));ensureChannel();save();
+  renderChannelBar();fillChannelFields();renderSchedule();setDefaultStart();say('Cambio deshecho.');
+}
+
+/* ---------- agregar programas ---------- */
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function addProg(o){
+  const p={id:S.seq++,ch:S.curCh,title:o.title,sub:o.sub||'',desc:o.desc||'',cat:o.cat||'',icon:o.icon||'',year:o.year||'',
+    start:o.start,stop:o.start+o.dur*60000,season:o.season||0,episode:o.episode||0,tvId:o.tvId||0,isNew:!!o.isNew,offair:!!o.offair,
+    cast:o.cast||[],dir:o.dir||[],dirRole:o.dirRole||'director',rating:o.rating||''};
+  S.progs.push(p);return p;
+}
+/* si ya hay programas a esa hora, los recorre para dejar sitio al bloque nuevo */
+function makeRoom(t0,tEnd,ids){
+  if(!S.insert)return;
+  const after=S.progs.filter(p=>p.ch===S.curCh&&!ids.has(p.id)&&p.start>=t0);
+  if(!after.length)return;
+  const delta=tEnd-Math.min(...after.map(p=>p.start));
+  if(delta>0)after.forEach(p=>{p.start+=delta;p.stop+=delta});
+}
+/* reparto, director y clasificación por edades desde TMDB */
+function extras(d,kind){
+  if(!S.credits)return{};
+  const cr=d.credits||{},cast=(cr.cast||[]).slice(0,6).map(x=>x.name);
+  const dir=kind==='movie'?(cr.crew||[]).filter(x=>x.job==='Director').slice(0,2).map(x=>x.name):(d.created_by||[]).slice(0,2).map(x=>x.name);
+  let rating='';
+  if(kind==='movie'){
+    const c=((d.release_dates||{}).results||[]).find(r=>r.iso_3166_1===S.country);
+    rating=c?((c.release_dates||[]).find(x=>x.certification)||{}).certification||'':'';
+  }else{
+    const c=((d.content_ratings||{}).results||[]).find(r=>r.iso_3166_1===S.country);
+    rating=c?c.rating||'':'';
+  }
+  return{dir,cast,rating};
+}
+async function addAuto(thenSearch){
+  if(!sel)return say('Busca y elige un título primero.',1);
+  let t=fromLocal($('aStart').value);if(isNaN(t))return say('Indica la hora de inicio.',1);
+  if(sel.media_type==='tv'&&!show)return say('Espera un momento, estoy cargando la serie.',1);
+  const t0=t,ov=+$('durA').value||0,ids=new Set();let n=0;
+  $('bAdd').disabled=true;$('bAddNext').disabled=true;snap();
+  try{
+    if(sel.media_type==='movie'){
+      const m=await tmdb('/movie/'+sel.id,{append_to_response:'credits,release_dates'});
+      const p=addProg({title:m.title,desc:m.overview,cat:(m.genres||[]).map(g=>g.name).join(', '),icon:img(m.poster_path),year:yearOf(m),
+        start:t,dur:rdur(ov||m.runtime||100),...extras(m,'movie')});
+      ids.add(p.id);t=p.stop;n=1;
+    }else{
+      const s=+$('tvS').value||0,e=+$('tvE').value||1,count=Math.max(1,+$('tvN').value||1),isNew=$('newA').checked;
+      const cat=(show.genres||[]).map(g=>g.name).join(', '),ex={...extras(show,'tv'),dirRole:'producer'},queue=[];
+      if($('tvRand').checked){
+        const pool=shuffle((await getSeason(sel.id,s)).episodes.slice());
+        if(!pool.length)say(`No encontré episodios en la temporada ${s}.`,1);
+        for(let i=0;i<count&&pool.length;i++)queue.push({s,ep:pool[i%pool.length]});
+      }else{
+        let ss=s,ee=e;
+        while(queue.length<count){
+          const ep=(await getSeason(sel.id,ss)).episodes.find(x=>x.episode_number===ee);
+          if(!ep){if(ee>1&&ss<show.number_of_seasons){ss++;ee=1;continue}say(`No encontré T${ss} E${ee} en TMDB.`,1);break}
+          queue.push({s:ss,ep});ee++;
         }
+      }
+      for(const q of queue){
+        const p=addProg({title:show.name,sub:q.ep.name,desc:q.ep.overview||show.overview,cat,icon:img(q.ep.still_path||show.poster_path),
+          start:t,dur:rdur(ov||q.ep.runtime||(show.episode_run_time||[])[0]||30),season:q.s,episode:q.ep.episode_number,tvId:sel.id,isNew,...ex});
+        ids.add(p.id);t=p.stop;n++;
+      }
+    }
+    if(n){makeRoom(t0,t,ids);parsed=null;say(`${n} programa${n>1?'s':''} agregado${n>1?'s':''} a ${chanName(S.curCh)}.`)}
+  }catch(err){say(err.message,1)}
+  if(!n)dropSnap();
+  $('bAdd').disabled=false;$('bAddNext').disabled=false;
+  save();renderChannelBar();renderSchedule();setDefaultStart();
+  if(thenSearch&&n){sel=null;show=null;renderDetail();$('q').value='';$('q').focus();window.scrollTo({top:0,behavior:'smooth'})}
+  else await suggestEp();
+}
 
-        function updateQuality(newQuality) {
-            if (newQuality === 0) {
-                window.hls.currentLevel = -1; 
-            } else {
-                window.hls.levels.forEach((level, levelIndex) => {
-                    if (level.height === newQuality) {
-                        window.hls.currentLevel = levelIndex;
-                    }
-                });
-            }
-        }
-    </script>
+/* campos compartidos (pestaña Manual y ventana Editar) */
+const fields=p=>`
+<div class="grid2"><label>Título<input id="${p}Title"></label><label>Título del episodio (opcional)<input id="${p}Sub"></label></div>
+<label style="margin-bottom:12px">Descripción<textarea id="${p}Desc"></textarea></label>
+<div class="grid4">
+  <label>Temporada<input id="${p}Season" type="number" min="0"></label>
+  <label>Episodio<input id="${p}Ep" type="number" min="0"></label>
+  <label>Hora de inicio<input id="${p}Start" type="datetime-local" class="${p==='m'?'st':''}"></label>
+  <label>Duración (min)<input id="${p}Dur" type="number" min="1" value="30"></label>
+</div>
+<label class="chk" style="margin-bottom:6px"><input type="checkbox" id="${p}New"> Marcar como episodio nuevo</label>
+<details><summary>Más opciones</summary><div class="grid2"><label>Categorías (separadas por comas)<input id="${p}Cat"></label><label>Imagen (URL)<input id="${p}Icon" type="url"></label></div>
+<div class="grid2"><label>Clasificación (ej: +13, TV-14)<input id="${p}Rating"></label><label>Reparto (separado por comas)<input id="${p}Cast"></label></div></details>`;
+function readFields(p){
+  return{title:$(p+'Title').value.trim(),sub:$(p+'Sub').value.trim(),desc:$(p+'Desc').value.trim(),cat:$(p+'Cat').value.trim(),icon:$(p+'Icon').value.trim(),
+    rating:$(p+'Rating').value.trim(),cast:$(p+'Cast').value.split(',').map(s=>s.trim()).filter(Boolean),
+    season:+$(p+'Season').value||0,episode:+$(p+'Ep').value||0,isNew:$(p+'New').checked,start:fromLocal($(p+'Start').value),dur:+$(p+'Dur').value};
+}
+function addManual(){
+  const d=readFields('m');
+  if(isNaN(d.start))return say('Indica la hora de inicio.',1);
+  if(!d.title||!(d.dur>0))return say('Falta el título o la duración.',1);
+  snap();
+  const p=addProg({...d,dur:rdur(d.dur)});makeRoom(p.start,p.stop,new Set([p.id]));
+  ['Title','Sub','Desc','Cat','Icon','Season','Ep','Rating','Cast'].forEach(k=>$('m'+k).value='');$('mNew').checked=false;
+  save();renderChannelBar();renderSchedule();setDefaultStart();say('Programa agregado.');
+}
+function addOff(){
+  const start=fromLocal($('oStart').value),h=+$('oHours').value;
+  if(isNaN(start)||!(h>0))return say('Revisa la hora de inicio y la duración.',1);
+  snap();
+  const p=addProg({title:$('oTitle').value.trim()||'Fuera del aire',desc:$('oDesc').value.trim(),start,dur:Math.round(h*60),offair:true});
+  makeRoom(p.start,p.stop,new Set([p.id]));
+  save();renderChannelBar();renderSchedule();setDefaultStart();say('Bloque fuera del aire agregado.');
+}
+
+/* ---------- editar ---------- */
+function openEdit(id){
+  const p=S.progs.find(x=>x.id===id);if(!p)return;editId=id;
+  $('eTitle').value=p.title;$('eSub').value=p.sub;$('eDesc').value=p.desc;$('eCat').value=p.cat;$('eIcon').value=p.icon;
+  $('eRating').value=p.rating||'';$('eCast').value=(p.cast||[]).join(', ');
+  $('eSeason').value=p.season||'';$('eEp').value=p.episode||'';$('eNew').checked=!!p.isNew;
+  $('eStart').value=toLocal(p.start);$('eDur').value=Math.round((p.stop-p.start)/60000);
+  $('dEdit').showModal();
+}
+function saveEdit(){
+  const p=S.progs.find(x=>x.id===editId);if(!p)return;
+  const d=readFields('e');
+  if(isNaN(d.start)||!d.title||!(d.dur>0))return say('Falta el título, la hora o la duración.',1);
+  snap();
+  const oldStop=p.stop,{start,dur,...rest}=d;
+  Object.assign(p,rest,{start,stop:start+rdur(dur)*60000});
+  if($('eShift').checked){const delta=p.stop-oldStop;S.progs.forEach(x=>{if(x.ch===p.ch&&x.id!==p.id&&x.start>=oldStop){x.start+=delta;x.stop+=delta}})}
+  editId=null;$('dEdit').close();save();renderSchedule();setDefaultStart();say('Cambios guardados.');
+}
+function removeProg(id){snap();S.progs=S.progs.filter(p=>p.id!==id);save();renderChannelBar();renderSchedule();setDefaultStart();suggestEp()}
+function dupProg(id){
+  const p=S.progs.find(x=>x.id===id);if(!p)return;snap();
+  const l=progsOf(p.ch),last=l[l.length-1],d=p.stop-p.start;
+  S.progs.push({...p,id:S.seq++,start:last.stop,stop:last.stop+d,cast:[...(p.cast||[])],dir:[...(p.dir||[])]});
+  save();renderChannelBar();renderSchedule();setDefaultStart();say('Programa duplicado al final del canal.');
+}
+function moveProg(id,dir){
+  const l=progsOf(S.curCh),i=l.findIndex(p=>p.id===id),j=i+dir;
+  if(i<0||j<0||j>=l.length)return;
+  snap();
+  const a=dir<0?l[j]:l[i],b=dir<0?l[i]:l[j];
+  const da=a.stop-a.start,db=b.stop-b.start,gap=b.start-a.stop,s0=a.start;
+  b.start=s0;b.stop=s0+db;a.start=b.stop+gap;a.stop=a.start+da;
+  save();renderSchedule();setDefaultStart();
+}
+
+/* ---------- herramientas ---------- */
+function compact(){
+  const l=progsOf(S.curCh);if(l.length<2)return;snap();
+  for(let i=1;i<l.length;i++){const d=l[i].stop-l[i].start;l[i].start=l[i-1].stop;l[i].stop=l[i].start+d}
+  save();renderSchedule();setDefaultStart();say('Se quitaron los huecos.');
+}
+function shuffleOrder(){
+  const l=progsOf(S.curCh);if(l.length<2)return say('Hacen falta al menos 2 programas.',1);
+  snap();let t=l[0].start;
+  shuffle(l.slice()).forEach(p=>{const d=p.stop-p.start;p.start=t;p.stop=t+d;t=p.stop});
+  save();renderSchedule();setDefaultStart();say('Orden mezclado. Los programas quedaron seguidos desde el primer inicio.');
+}
+function repeat(){
+  const l=progsOf(S.curCh),days=+$('rDays').value;
+  if(!l.length||!(days>0))return say('No hay programas para repetir.',1);
+  const first=l[0].start,cyc=l[l.length-1].stop-first,limit=first+days*864e5;
+  if(cyc<=0)return;
+  snap();let k=1,added=0;
+  outer:while(first+k*cyc<limit){
+    for(const p of l){
+      const st=p.start+k*cyc;if(st>=limit)break outer;
+      if(added>=5000){say('Límite de 5000 programas alcanzado.',1);break outer}
+      S.progs.push({...p,id:S.seq++,start:st,stop:p.stop+k*cyc,cast:[...(p.cast||[])],dir:[...(p.dir||[])]});added++;
+    }
+    k++;
+  }
+  if(!added){dropSnap();return say('La programación ya cubre esos días.',1)}
+  save();renderChannelBar();renderSchedule();setDefaultStart();say(`${added} programas repetidos hasta completar ${days} día${days>1?'s':''}.`);
+}
+
+/* ---------- programación ---------- */
+function renderSchedule(){
+  const l=progsOf(S.curCh);
+  $('schTitle').textContent=`Programación de ${chanName(S.curCh)}`;
+  if(!l.length){$('schInfo').textContent='';$('rows').innerHTML='<div class="empty">Todavía no hay programas. Agrega el primero en el paso 2.</div>';return}
+  const mins=l.reduce((a,p)=>a+(p.stop-p.start)/60000,0),h=Math.floor(mins/60);
+  $('schInfo').textContent=`${l.length} programa${l.length>1?'s':''} · ${h} h ${Math.round(mins%60)} min · horarios en ${S.tz}`;
+  let prev=null,day='',out='';
+  l.forEach(p=>{
+    const dk=dayKey(p.start);
+    if(dk!==day){day=dk;out+=`<div class="day">${esc(dayLabel(p.start))}</div>`}
+    if(prev&&p.start!==prev.stop){const d=Math.round((p.start-prev.stop)/60000);out+=`<div class="gap">${d>0?`Hueco de ${d} min`:`Se empalma ${-d} min con el anterior`}</div>`}
+    prev=p;
+    const se=p.season?`<span class="tag">T${p.season} E${p.episode}</span>`:'';
+    const nw=p.isNew?'<span class="tag new">Nuevo</span>':'';
+    const rt=p.rating?`<span class="tag">${esc(p.rating)}</span>`:'';
+    out+=`<div class="item ${p.offair?'off':''}">
+      <div class="when"><b>${hm(p.start)}</b><span>${hm(p.stop)}</span></div>
+      ${p.icon?`<img class="th" src="${esc(p.icon)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="th"></span>'}
+      <div class="info"><strong>${esc(p.title)}</strong>${se}${rt}${nw}${p.sub?`<div class="sub">${esc(p.sub)}</div>`:''}<div class="sub">${Math.round((p.stop-p.start)/60000)} min</div></div>
+      <div class="ops"><button class="link mini" data-up="${p.id}" title="Subir" aria-label="Subir">↑</button><button class="link mini" data-down="${p.id}" title="Bajar" aria-label="Bajar">↓</button><button class="link mini" data-dup="${p.id}">Duplicar</button><button class="link mini" data-edit="${p.id}">Editar</button><button class="link mini" data-rm="${p.id}">Quitar</button></div></div>`;
+  });
+  $('rows').innerHTML=out;
+}
+function showTab(t){
+  ['search','manual','off'].forEach(k=>$('tab-'+k).hidden=k!==t);
+  document.querySelectorAll('#mainTabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+}
+
+/* ---------- exportar ---------- */
+function buildXML(){
+  const x=S.exp,lg=S.lang.slice(0,2),now=Date.now();
+  const chans=x.only?S.channels.filter(c=>c.id===S.curCh):S.channels,ids=new Set(chans.map(c=>c.id));
+  const o=['<?xml version="1.0" encoding="UTF-8"?>','<tv generator-info-name="EPG Maker">'];
+  chans.forEach(c=>{
+    o.push(`  <channel id="${esc(c.id)}">`,`    <display-name>${esc(c.name||c.id)}</display-name>`);
+    if(c.logo)o.push(`    <icon src="${esc(c.logo)}"/>`);
+    o.push('  </channel>');
+  });
+  S.progs.filter(p=>ids.has(p.ch)&&!(x.future&&p.stop<now)).sort((a,b)=>a.start-b.start).forEach(p=>{
+    o.push(`  <programme start="${xd(p.start)}" stop="${xd(p.stop)}" channel="${esc(p.ch)}">`);
+    o.push(`    <title lang="${lg}">${esc(p.title)}</title>`);
+    if(p.sub)o.push(`    <sub-title lang="${lg}">${esc(p.sub)}</sub-title>`);
+    if(p.desc)o.push(`    <desc lang="${lg}">${esc(p.desc)}</desc>`);
+    const dirs=p.dir||[],cast=p.cast||[],prod=p.dirRole==='producer';
+    if(x.cred&&(dirs.length||cast.length)){
+      o.push('    <credits>');
+      if(!prod)dirs.forEach(n=>o.push(`      <director>${esc(n)}</director>`));
+      cast.forEach(n=>o.push(`      <actor>${esc(n)}</actor>`));
+      if(prod)dirs.forEach(n=>o.push(`      <producer>${esc(n)}</producer>`));
+      o.push('    </credits>');
+    }
+    if(p.year)o.push(`    <date>${esc(p.year)}</date>`);
+    (p.cat||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(c=>o.push(`    <category lang="${lg}">${esc(c)}</category>`));
+    if(x.img&&p.icon)o.push(`    <icon src="${esc(p.icon)}"/>`);
+    if(p.season&&p.episode)o.push(`    <episode-num system="xmltv_ns">${p.season-1}.${p.episode-1}.</episode-num>`,`    <episode-num system="onscreen">S${p2(p.season)}E${p2(p.episode)}</episode-num>`);
+    if(p.isNew)o.push('    <new />');
+    if(x.cred&&p.rating)o.push(`    <rating system="${esc(S.country)}"><value>${esc(p.rating)}</value></rating>`);
+    o.push('  </programme>');
+  });
+  o.push('</tv>');return o.join('\n');
+}
+function download(name,data,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(data instanceof Blob?data:new Blob([data],{type}));a.download=name;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+async function gzip(text){
+  if(typeof CompressionStream==='undefined')throw new Error('Tu navegador no sabe comprimir en .gz. Descarga el .xml normal.');
+  return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
+}
+function xmlOrWarn(){
+  if(!S.progs.length){say('Agrega al menos un programa antes de exportar.',1);return null}
+  const x=buildXML();
+  if(!/<programme /.test(x)){say('Con esas opciones no queda ningún programa para exportar.',1);return null}
+  return x;
+}
+
+/* ---------- importar un XMLTV existente ---------- */
+function parseXd(s){
+  const m=(s||'').trim().match(/^(\d{4})(\d\d)(\d\d)(\d\d)?(\d\d)?(\d\d)?\s*([+-])?(\d{2})?(\d{2})?/);
+  if(!m)return NaN;
+  let ms=Date.UTC(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0));
+  if(m[7])ms-=(+m[8]*60+ +(m[9]||0))*(m[7]==='-'?-1:1)*60000;
+  return ms;
+}
+function importXML(text){
+  const doc=new DOMParser().parseFromString(text,'application/xml');
+  if(doc.querySelector('parsererror')||!doc.querySelector('tv'))throw new Error('Ese archivo no es un XMLTV válido.');
+  const txt=(el,sel)=>{const n=el.querySelector(sel);return n?n.textContent.trim():''};
+  const all=(el,sel)=>[...el.querySelectorAll(sel)].map(n=>n.textContent.trim()).filter(Boolean);
+  snap();
+  const chs=[...doc.querySelectorAll('tv > channel')].map(el=>({id:el.getAttribute('id'),name:txt(el,'display-name'),logo:(el.querySelector('icon')||{getAttribute:()=>''}).getAttribute('src')||''})).filter(c=>c.id);
+  const replace=new Set(chs.map(c=>c.id));
+  S.progs=S.progs.filter(p=>!replace.has(p.ch));
+  chs.forEach(c=>{const old=S.channels.find(x=>x.id===c.id);if(old){old.name=c.name||old.name;old.logo=c.logo||old.logo}else S.channels.push({id:c.id,name:c.name||c.id,logo:c.logo,auto:false})});
+  let n=0;
+  doc.querySelectorAll('tv > programme').forEach(el=>{
+    const ch=el.getAttribute('channel'),start=parseXd(el.getAttribute('start')),stop=parseXd(el.getAttribute('stop'));
+    if(!ch||isNaN(start)||isNaN(stop)||stop<=start)return;
+    if(!S.channels.some(c=>c.id===ch))S.channels.push({id:ch,name:ch,logo:'',auto:false});
+    let season=0,episode=0;
+    el.querySelectorAll('episode-num').forEach(e=>{
+      const sys=e.getAttribute('system'),v=e.textContent.trim();
+      if(sys==='onscreen'){const m=v.match(/S(\d+)\s*E(\d+)/i);if(m&&!season){season=+m[1];episode=+m[2]}}
+      else if(sys==='xmltv_ns'&&!season){const m=v.match(/^(\d+)\s*\.\s*(\d+)/);if(m){season=+m[1]+1;episode=+m[2]+1}}
+    });
+    const title=txt(el,'title'),producers=all(el,'credits > producer');
+    S.progs.push({id:S.seq++,ch,title,sub:txt(el,'sub-title'),desc:txt(el,'desc'),cat:all(el,'category').join(', '),
+      icon:(el.querySelector('icon')||{getAttribute:()=>''}).getAttribute('src')||'',year:txt(el,'date'),start,stop,season,episode,tvId:0,
+      isNew:!!el.querySelector('new'),offair:/fuera del aire|off[\s-]?air/i.test(title),
+      cast:all(el,'credits > actor'),dir:producers.length?producers:all(el,'credits > director'),dirRole:producers.length?'producer':'director',rating:txt(el,'rating > value')});
+    n++;
+  });
+  if(!n){dropSnap();throw new Error('No encontré programas dentro de ese XML.')}
+  S.curCh=chs.length?chs[0].id:S.curCh;ensureChannel();save();
+  renderChannelBar();fillChannelFields();renderSchedule();setDefaultStart();
+  say(`Se importaron ${n} programas de ${replace.size||1} canal${replace.size>1?'es':''}. Si no era lo que querías, usa Deshacer.`);
+}
+
+/* ---------- ajustes ---------- */
+function openSettings(){
+  $('sKey').value=S.key;$('sLang').value=S.lang;$('sTz').value=S.tz;
+  $('sCountry').value=S.country;$('sCredits').checked=!!S.credits;$('sH12').value=S.h12?'1':'0';
+  $('dlg').showModal();
+}
+function updateBanner(){$('keyBanner').hidden=!!S.key}
+function openExport(){
+  $('xOnly').checked=!!S.exp.only;$('xFuture').checked=!!S.exp.future;$('xImg').checked=!!S.exp.img;$('xCred').checked=!!S.exp.cred;
+  $('xPrev').hidden=true;$('dExp').showModal();
+}
+
+/* ---------- eventos ---------- */
+$('manualFields').innerHTML=fields('m');$('editFields').innerHTML=fields('e');
+$('bSettings').onclick=openSettings;
+$('sCancel').onclick=()=>$('dlg').close();
+$('sOk').onclick=()=>{
+  const tz=$('sTz').value.trim()||S.tz;
+  try{new Intl.DateTimeFormat('en-US',{timeZone:tz})}catch(e){return say('Esa zona horaria no es válida. Ejemplo: America/Mexico_City.',1)}
+  const changed=tz!==S.tz;
+  S.key=$('sKey').value.trim();S.lang=$('sLang').value;S.tz=tz;S.country=$('sCountry').value;S.credits=$('sCredits').checked;S.h12=$('sH12').value==='1';
+  save();updateBanner();renderSchedule();setDefaultStart();$('dlg').close();
+  say(changed?'Ajustes guardados. Revisa los horarios: los programas ya creados conservan su momento real, pero ahora se muestran en la nueva zona.':'Ajustes guardados.');
+};
+$('bKey').onclick=()=>{const k=$('kKey').value.trim();if(!k)return say('Pega tu API key primero.',1);S.key=k;save();updateBanner();say('Búsqueda activada. Ya puedes buscar series y películas.')};
+$('mainTabs').onclick=ev=>{const b=ev.target.closest('[data-tab]');if(b)showTab(b.dataset.tab)};
+$('kind').onclick=ev=>{const b=ev.target.closest('[data-k]');if(!b)return;kind=b.dataset.k;document.querySelectorAll('#kind button').forEach(x=>x.classList.toggle('on',x===b))};
+
+$('chSel').onchange=()=>switchChannel($('chSel').value);
+$('bNewCh').onclick=()=>{
+  let i=S.channels.length+1,id;while(S.channels.some(c=>c.id===(id='canal-'+i)))i++;
+  S.channels.push({id,name:'Canal '+i,logo:'',auto:true});switchChannel(id);$('cName').focus();$('cName').select();
+};
+$('bDelCh').onclick=()=>{
+  const c=curChan();if(!c)return;
+  if(!confirm(`¿Eliminar el canal ${c.name||c.id} y toda su programación?`))return;
+  snap();S.channels=S.channels.filter(x=>x!==c);S.progs=S.progs.filter(p=>p.ch!==c.id);
+  ensureChannel();switchChannel(S.curCh);say('Canal eliminado. Puedes usar Deshacer.');
+};
+$('cName').oninput=()=>{
+  const c=curChan();c.name=$('cName').value;
+  if(c.auto){const s=slugify(c.name);if(s&&renameChannel(c,s))$('cId').value=c.id}
+  save();renderChannelBar();$('schTitle').textContent=`Programación de ${chanName(S.curCh)}`;
+};
+$('cId').onchange=()=>{
+  const c=curChan(),v=$('cId').value.trim().replace(/\s+/g,'-');
+  if(!v){$('cId').value=c.id;return}
+  if(v===c.id)return;
+  if(!renameChannel(c,v)){$('cId').value=c.id;return say('Ya existe otro canal con ese ID.',1)}
+  c.auto=false;$('cId').value=c.id;save();renderChannelBar();say('ID actualizado. Recuerda usar el mismo tvg-id en tu lista m3u.');
+};
+$('cLogo').onchange=()=>{curChan().logo=$('cLogo').value.trim();save()};
+$('round').onchange=()=>{S.round=$('round').checked;save();say(S.round?'Las duraciones nuevas se redondean hacia arriba a 15 minutos.':'Redondeo desactivado.')};
+$('insertMode').onchange=()=>{S.insert=$('insertMode').checked;save()};
+
+$('bSearch').onclick=doSearch;
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+$('results').onclick=ev=>{const b=ev.target.closest('[data-i]');if(b)pick(+b.dataset.i)};
+$('dHead').onclick=ev=>{if(ev.target.closest('#bChange')){sel=null;show=null;renderDetail()}};
+$('bCancelSel').onclick=()=>{sel=null;show=null;renderDetail()};
+$('bAdd').onclick=()=>addAuto(false);
+$('bAddNext').onclick=()=>addAuto(true);
+$('bManual').onclick=addManual;
+$('bOff').onclick=addOff;
+
+$('rows').onclick=ev=>{
+  const g=a=>{const b=ev.target.closest('['+a+']');return b?+b.getAttribute(a):null};
+  let id;
+  if((id=g('data-rm'))!==null)removeProg(id);
+  else if((id=g('data-edit'))!==null)openEdit(id);
+  else if((id=g('data-dup'))!==null)dupProg(id);
+  else if((id=g('data-up'))!==null)moveProg(id,-1);
+  else if((id=g('data-down'))!==null)moveProg(id,1);
+};
+$('eCancel').onclick=()=>{editId=null;$('dEdit').close()};
+$('eSave').onclick=saveEdit;
+$('bCompact').onclick=compact;
+$('bShuffle').onclick=shuffleOrder;
+$('bRepeat').onclick=repeat;
+$('bClear').onclick=()=>{
+  if(!progsOf(S.curCh).length)return;
+  if(confirm(`¿Quitar todos los programas de ${chanName(S.curCh)}?`)){snap();S.progs=S.progs.filter(p=>p.ch!==S.curCh);save();renderChannelBar();renderSchedule();setDefaultStart();say('Programación vaciada. Puedes usar Deshacer.')}
+};
+$('bUndo').onclick=undo;
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();undo()}
+});
+
+$('bExport').onclick=()=>{
+  const x=xmlOrWarn();if(!x)return;
+  download('epg.xml',x,'application/xml');
+  say('epg.xml descargado. En tu lista m3u, el tvg-id de cada canal debe ser el ID que pusiste en el paso 1.');
+};
+$('bExportMore').onclick=openExport;
+['xOnly','xFuture','xImg','xCred'].forEach(id=>$(id).onchange=()=>{
+  S.exp={only:$('xOnly').checked,future:$('xFuture').checked,img:$('xImg').checked,cred:$('xCred').checked};save();$('xPrev').hidden=true;
+});
+$('xDl').onclick=()=>{const x=xmlOrWarn();if(x){download('epg.xml',x,'application/xml');say('epg.xml descargado.')}};
+$('xGz').onclick=async()=>{
+  const x=xmlOrWarn();if(!x)return;
+  try{download('epg.xml.gz',await gzip(x),'application/gzip');say('epg.xml.gz descargado.')}catch(e){say(e.message,1)}
+};
+$('xCopy').onclick=async()=>{
+  const x=xmlOrWarn();if(!x)return;
+  try{await navigator.clipboard.writeText(x);say('XML copiado al portapapeles.')}
+  catch(e){const t=$('xPrev');t.hidden=false;t.value=x;t.select();say('Tu navegador no permitió copiar directo. Ya quedó seleccionado: presiona Ctrl+C.',1)}
+};
+$('xView').onclick=()=>{
+  const x=xmlOrWarn();if(!x)return;
+  const t=$('xPrev');t.hidden=false;t.value=x.length>200000?x.slice(0,200000)+'\n\n... (vista previa recortada, el archivo completo es más largo)':x;
+};
+$('xClose').onclick=()=>$('dExp').close();
+
+$('bSave').onclick=()=>{const {key,...rest}=S;download('epg-proyecto.json',JSON.stringify(rest,null,1),'application/json');say('Proyecto guardado (sin tu API key).')};
+$('bLoad').onclick=()=>$('fLoad').click();
+$('fLoad').onchange=async ev=>{
+  const f=ev.target.files[0];if(!f)return;
+  try{
+    const text=await f.text();
+    if(/\.xml$/i.test(f.name)||/^\s*<\?xml|^\s*<tv[\s>]/i.test(text))importXML(text);
+    else{
+      const d=JSON.parse(text);
+      if(!Array.isArray(d.channels)||!Array.isArray(d.progs))throw 0;
+      snap();
+      Object.assign(S,{channels:d.channels,progs:d.progs,seq:d.seq||S.seq,curCh:d.curCh||'',tz:d.tz||S.tz,lang:d.lang||S.lang,round:!!d.round,
+        insert:d.insert!==false,credits:d.credits!==false,country:d.country||S.country,h12:!!d.h12,exp:Object.assign({},S.exp,d.exp)});
+      ensureChannel();save();renderChannelBar();fillChannelFields();renderSchedule();setDefaultStart();say('Proyecto cargado.');
+    }
+  }catch(e){say(e&&e.message&&e.message.length>1?e.message:'Ese archivo no es un proyecto ni un XMLTV válido.',1)}
+  ev.target.value='';
+};
+
+load();S.exp=Object.assign({only:false,future:false,img:true,cred:true},S.exp);
+ensureChannel();updateBanner();renderChannelBar();fillChannelFields();$('insertMode').checked=!!S.insert;
+renderSchedule();setDefaultStart();
+if(!S.key)say('Para empezar, pega tu API key de TMDB arriba. Después busca un título en el paso 2.');
+</script>
 </body>
 </html>
